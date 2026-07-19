@@ -98,6 +98,11 @@
 			path = iScrobbleWidget;
 			sourceTree = "<group>";
 		};
+		A1B2C3D40000000000000001 /* Shared */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Shared;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -188,6 +193,7 @@
 			);
 			fileSystemSynchronizedGroups = (
 				148281A12F5D2032006C14C5 /* iScrobble */,
+				A1B2C3D40000000000000001 /* Shared */,
 			);
 			name = iScrobble;
 			packageProductDependencies = (
@@ -256,6 +262,7 @@
 			);
 			fileSystemSynchronizedGroups = (
 				148282472F5D2CA5006C14C5 /* iScrobbleWidget */,
+				A1B2C3D40000000000000001 /* Shared */,
 			);
 			name = iScrobbleWidgetExtension;
 			packageProductDependencies = (

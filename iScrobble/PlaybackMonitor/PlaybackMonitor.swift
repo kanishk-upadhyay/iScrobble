@@ -1,21 +1,32 @@
 import Foundation
 import AppKit
 
+/// Holds parsed notification data — all properties are Sendable.
+private struct TrackNotification: Sendable {
+    let playerState: String
+    let title: String
+    let artist: String
+    let album: String
+    let duration: TimeInterval
+    let elapsed: TimeInterval
+}
+
 @Observable
+@MainActor
 final class PlaybackMonitor {
 
     private(set) var currentTrack: Track?
     private(set) var isPlaying: Bool = false
     private(set) var playbackElapsed: TimeInterval = 0
 
-    var onTrackStarted: ((Track) -> Void)?
-    var onTrackStopped: (() -> Void)?
-    var onPlaybackStateChanged: ((Bool) -> Void)?
+    var onTrackStarted: (@MainActor (Track) -> Void)?
+    var onTrackStopped: (@MainActor () -> Void)?
+    var onPlaybackStateChanged: (@MainActor (Bool) -> Void)?
 
     private var observer: NSObjectProtocol?
     private var lastTrackID: String?
     private let lastFMClient: LastFMClient
-    
+
     init(lastFMClient: LastFMClient) {
         self.lastFMClient = lastFMClient
     }
@@ -27,7 +38,20 @@ final class PlaybackMonitor {
             object: nil,
             queue: .main
         ) { [weak self] notification in
-            self?.handleNotification(notification)
+            // Extract only Sendable primitives from the notif before crossing actor boundary
+            let info = notification.userInfo
+            print("[PlaybackMonitor] Received notification — userInfo: \(info ?? [:])")
+            let parsed = TrackNotification(
+                playerState: info?["Player State"] as? String ?? "",
+                title: info?["Name"] as? String ?? "",
+                artist: info?["Artist"] as? String ?? "",
+                album: info?["Album"] as? String ?? "",
+                duration: (info?["Total Time"] as? Double ?? 0) / 1000.0,
+                elapsed: info?["Player Position"] as? Double ?? 0
+            )
+            Task { @MainActor in
+                self?.handleNotification(parsed)
+            }
         }
         print("[PlaybackMonitor] Observer registered — waiting for Music.app events")
     }
@@ -40,14 +64,10 @@ final class PlaybackMonitor {
         }
     }
 
-    private func handleNotification(_ notification: Notification) {
-        let info = notification.userInfo ?? [:]
-        print("[PlaybackMonitor] Received notification — userInfo: \(info)")
+    private func handleNotification(_ parsed: TrackNotification) {
+        print("[PlaybackMonitor] Player State: \"\(parsed.playerState)\"")
 
-        let playerState = info["Player State"] as? String ?? ""
-        print("[PlaybackMonitor] Player State: \"\(playerState)\"")
-
-        if playerState == "Stopped" {
+        if parsed.playerState == "Stopped" {
             if currentTrack != nil {
                 currentTrack = nil
                 lastTrackID = nil
@@ -62,55 +82,46 @@ final class PlaybackMonitor {
             return
         }
 
-        let newIsPlaying = playerState == "Playing"
-        let title  = info["Name"] as? String ?? ""
-        let artist = info["Artist"] as? String ?? ""
-        let album  = info["Album"] as? String ?? ""
-        let totalTimeMs = info["Total Time"] as? Double ?? 0
-        let duration = totalTimeMs / 1000.0
-        let elapsed  = info["Player Position"] as? Double ?? 0
+        let newIsPlaying = parsed.playerState == "Playing"
 
-        print("[PlaybackMonitor] Parsed — title: \"\(title)\" | artist: \"\(artist)\" | album: \"\(album)\" | duration: \(String(format: "%.1f", duration))s | elapsed: \(String(format: "%.1f", elapsed))s | state: \(playerState)")
-
-        guard !title.isEmpty else {
+        guard !parsed.title.isEmpty else {
             print("[PlaybackMonitor] Empty title — ignoring notification")
             return
         }
 
-        let trackID = "\(artist)-\(title)"
+        print("[PlaybackMonitor] Parsed — title: \"\(parsed.title)\" | artist: \"\(parsed.artist)\" | album: \"\(parsed.album)\" | duration: \(String(format: "%.1f", parsed.duration))s | elapsed: \(String(format: "%.1f", parsed.elapsed))s | state: \(parsed.playerState)")
+
+        let trackID = "\(parsed.artist)-\(parsed.title)"
         if trackID != lastTrackID {
             lastTrackID = trackID
-            
+
             let track = Track(
                 id: trackID,
-                title: title,
-                artist: artist,
-                album: album,
-                duration: duration,
+                title: parsed.title,
+                artist: parsed.artist,
+                album: parsed.album,
+                duration: parsed.duration,
                 albumArt: nil
             )
             currentTrack = track
-            print("[PlaybackMonitor] Track changed → \"\(artist) — \(title)\"")
+            print("[PlaybackMonitor] Track changed → \"\(parsed.artist) — \(parsed.title)\"")
             onTrackStarted?(track)
-            
+
             Task { [weak self] in
                 guard let self = self else { return }
                 do {
                     print("[PlaybackMonitor] Fetching album art from Last.fm...")
-                    if let albumArt = try await self.lastFMClient.fetchAlbumArt(artist: artist, track: title) {
+                    if let albumArt = try await self.lastFMClient.fetchAlbumArt(artist: parsed.artist, track: parsed.title) {
                         print("[PlaybackMonitor] Album art fetched successfully")
                         let updatedTrack = Track(
                             id: trackID,
-                            title: title,
-                            artist: artist,
-                            album: album,
-                            duration: duration,
+                            title: parsed.title,
+                            artist: parsed.artist,
+                            album: parsed.album,
+                            duration: parsed.duration,
                             albumArt: albumArt
                         )
-                        await MainActor.run {
-                            self.currentTrack = updatedTrack
-                            self.onTrackStarted?(updatedTrack)
-                        }
+                        currentTrack = updatedTrack
                     } else {
                         print("[PlaybackMonitor] No album art available from Last.fm")
                     }
@@ -126,6 +137,6 @@ final class PlaybackMonitor {
             onPlaybackStateChanged?(newIsPlaying)
         }
 
-        playbackElapsed = elapsed
+        playbackElapsed = parsed.elapsed
     }
 }

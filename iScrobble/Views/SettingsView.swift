@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 import ServiceManagement
 
 struct SettingsView: View {
@@ -12,7 +13,7 @@ struct SettingsView: View {
     private var storage: StorageManager { appState.storage }
 
     private var version: String {
-        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "2.2"
+        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "Unknown"
     }
 
     var body: some View {
@@ -44,6 +45,31 @@ struct SettingsView: View {
                         VStack(alignment: .leading, spacing: 2) {
                             Text("Enable scrobbling")
                             Text("Automatically scrobble tracks to Last.fm")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }
+
+                Section("Launch") {
+                    Toggle(isOn: Binding(
+                        get: { SMAppService.mainApp.status == .enabled },
+                        set: { enabled in
+                            do {
+                                if enabled {
+                                    try SMAppService.mainApp.register()
+                                } else {
+                                    try SMAppService.mainApp.unregister()
+                                }
+                                storage.launchAtLogin = enabled
+                            } catch {
+                                print("[Settings] Failed to toggle launch at login: \(error)")
+                            }
+                        }
+                    )) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Launch at login")
+                            Text("Automatically start iScrobble when you log in")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         }
@@ -137,14 +163,3 @@ struct SettingsView: View {
     }
 }
 
-private extension View {
-    func pointerCursor() -> some View {
-        self.onHover { hovering in
-            if hovering {
-                NSCursor.pointingHand.set()
-            } else {
-                NSCursor.arrow.set()
-            }
-        }
-    }
-}

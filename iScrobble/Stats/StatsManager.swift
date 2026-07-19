@@ -23,10 +23,14 @@ struct ListeningStats: Codable {
     }
 
     private static var todayString: String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
-        return formatter.string(from: Date())
+        todayFormatter.string(from: Date())
     }
+
+    private static let todayFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM-dd"
+        return f
+    }()
 
     mutating func updateTotalScrobbles(_ total: Int) {
         totalScrobbles = total
