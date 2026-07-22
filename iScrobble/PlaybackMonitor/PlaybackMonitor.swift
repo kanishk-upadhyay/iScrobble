@@ -109,8 +109,19 @@ final class PlaybackMonitor {
 
             Task { [weak self] in
                 guard let self = self else { return }
+                // Try MediaRemote first — in-memory, ~10ms
+                if let mrImage = await MediaRemoteArtwork.fetchArtwork() {
+                    guard self.lastTrackID == trackID else { return }
+                    self.currentTrack = Track(
+                        id: trackID, title: parsed.title, artist: parsed.artist,
+                        album: parsed.album, duration: parsed.duration, albumArt: mrImage
+                    )
+                    print("[PlaybackMonitor] Album art from MediaRemote")
+                    return
+                }
+                // Fall back to Last.fm API
                 do {
-                    print("[PlaybackMonitor] Fetching album art from Last.fm...")
+                    print("[PlaybackMonitor] MediaRemote had no art, trying Last.fm...")
                     if let albumArt = try await self.lastFMClient.fetchAlbumArt(artist: parsed.artist, track: parsed.title) {
                         print("[PlaybackMonitor] Album art fetched successfully")
                         let updatedTrack = Track(
