@@ -5,26 +5,31 @@ import AppKit
 final class StorageManager {
     static let shared = StorageManager()
 
-    private let appGroupID = "group.com.hexif.iScrobble"
+    private var appGroupID: String { SharedDefaults.appGroupID }
     private let nowPlayingFileName = "now_playing.json"
 
     private var groupContainerURL: URL? {
         FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroupID)
     }
 
-    private enum DefaultsKey {
-        static let scrobblingEnabled = "scrobblingEnabled"
-        static let launchAtLogin = "launchAtLogin"
-    }
+
 
     var scrobblingEnabled: Bool {
-        get { UserDefaults.standard.object(forKey: DefaultsKey.scrobblingEnabled) as? Bool ?? true }
-        set { UserDefaults.standard.set(newValue, forKey: DefaultsKey.scrobblingEnabled) }
+        get {
+            let shared = UserDefaults(suiteName: appGroupID)
+                            return shared?.object(forKey: SharedDefaults.scrobblingEnabled) as? Bool
+                ?? UserDefaults.standard.object(forKey: SharedDefaults.scrobblingEnabled) as? Bool
+                ?? true
+        }
+        set {
+            UserDefaults.standard.set(newValue, forKey: SharedDefaults.scrobblingEnabled)
+            UserDefaults(suiteName: appGroupID)?.set(newValue, forKey: SharedDefaults.scrobblingEnabled)
+        }
     }
 
     var launchAtLogin: Bool {
-        get { UserDefaults.standard.bool(forKey: DefaultsKey.launchAtLogin) }
-        set { UserDefaults.standard.set(newValue, forKey: DefaultsKey.launchAtLogin) }
+        get { UserDefaults.standard.bool(forKey: SharedDefaults.launchAtLogin) }
+        set { UserDefaults.standard.set(newValue, forKey: SharedDefaults.launchAtLogin) }
     }
 
     private enum KeychainKey {
@@ -41,7 +46,7 @@ final class StorageManager {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: keychainService,
-            kSecAttrAccount as String: key
+            kSecAttrAccount as String: key,
         ]
         let attributes: [String: Any] = [kSecValueData as String: data]
 
@@ -49,6 +54,7 @@ final class StorageManager {
         if status == errSecItemNotFound {
             var addQuery = query
             addQuery[kSecValueData as String] = data
+            addQuery[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlock
             SecItemAdd(addQuery as CFDictionary, nil)
         }
     }
@@ -71,7 +77,7 @@ final class StorageManager {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: keychainService,
-            kSecAttrAccount as String: key
+            kSecAttrAccount as String: key,
         ]
         SecItemDelete(query as CFDictionary)
     }

@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 
 struct MenuBarView: View {
     @Environment(AppState.self) private var appState
@@ -220,14 +221,3 @@ struct StatPill: View {
     }
 }
 
-private extension View {
-    func pointerCursor() -> some View {
-        self.onHover { hovering in
-            if hovering {
-                NSCursor.pointingHand.set()
-            } else {
-                NSCursor.arrow.set()
-            }
-        }
-    }
-}

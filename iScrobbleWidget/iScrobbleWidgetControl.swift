@@ -2,8 +2,6 @@
 //  iScrobbleWidgetControl.swift
 //  iScrobbleWidget
 //
-//  Created by HeXif on 08/03/2026.
-//
 
 import AppIntents
 import SwiftUI
@@ -16,38 +14,40 @@ struct iScrobbleWidgetControl: ControlWidget {
             provider: Provider()
         ) { value in
             ControlWidgetToggle(
-                "Start Timer",
+                "Scrobbling",
                 isOn: value,
-                action: StartTimerIntent()
-            ) { isRunning in
-                Label(isRunning ? "On" : "Off", systemImage: "timer")
+                action: ToggleScrobblingIntent()
+            ) { isOn in
+                Label(isOn ? "Scrobbling On" : "Scrobbling Off", systemImage: isOn ? "music.note" : "music.note.slash")
             }
         }
-        .displayName("Timer")
-        .description("A an example control that runs a timer.")
+        .displayName("iScrobble")
+        .description("Toggle scrobbling from Control Center.")
     }
 }
 
 extension iScrobbleWidgetControl {
     struct Provider: ControlValueProvider {
-        var previewValue: Bool {
-            false
-        }
+        var previewValue: Bool { false }
 
         func currentValue() async throws -> Bool {
-            let isRunning = true
-            return isRunning
+            // Shared UserDefaults is the only bridge to the main app
+            let defaults = UserDefaults(suiteName: SharedDefaults.appGroupID)
+            return defaults?.object(forKey: SharedDefaults.scrobblingEnabled) as? Bool ?? true
         }
     }
 }
 
-struct StartTimerIntent: SetValueIntent {
-    static let title: LocalizedStringResource = "Start a timer"
+struct ToggleScrobblingIntent: SetValueIntent {
+    static let title: LocalizedStringResource = "Toggle scrobbling"
 
-    @Parameter(title: "Timer is running")
+    @Parameter(title: "Scrobbling enabled")
     var value: Bool
 
     func perform() async throws -> some IntentResult {
+        if let defaults = UserDefaults(suiteName: SharedDefaults.appGroupID) {
+            defaults.set(value, forKey: SharedDefaults.scrobblingEnabled)
+        }
         return .result()
     }
 }
