@@ -27,10 +27,11 @@ Super simple settings screen, lastfm api configuration is below this.
 
 ## How to install
 
-1. Download the [latest release](https://github.com/xHeXifx/iScrobble/releases/latest)
-2. Move iScrobble.App to Applications (widgets and maybe other features wont work if you don't move it)
-3. Open iScrobble and click the icon in the menubar
-4. Enter API credentials from [https://www.last.fm/api/account/create](https://www.last.fm/api/account/create)
+Currently, iScrobble must be built from source.
+
+Pre-built releases are unavailable until a Developer ID signing and notarisation workflow is configured.
+
+See the "How to build from source" section below.
 
 ## How to build from source
 
@@ -40,29 +41,66 @@ Super simple settings screen, lastfm api configuration is below this.
 
 ### Build Instructions
 
-1. **Clone the repository**
-  ```bash
-  git clone https://github.com/xHeXifx/iScrobble
-  ```
+1. Clone the repository:
 
-2. **Open the project in Xcode**
-  - Navigate to the cloned directory
-  - Open `iScrobble.xcodeproj` in Xcode
+```bash
+git clone https://github.com/xHeXifx/iScrobble
+cd iScrobble
+```
 
-3. **Configure signing**
-  - Select the project in Xcode's navigator
-  - Go to "Signing & Capabilities" tab
-  - Select your development team
+2. Build the application:
 
-4. **Build the project**
-  - Press the play button in the top left
-  - The project will build and run
+```bash
+xcodebuild \
+  -scheme iScrobble \
+  -destination 'generic/platform=macOS' \
+  clean build \
+  CODE_SIGN_IDENTITY="Apple Development" \
+  CODE_SIGN_STYLE=Automatic \
+  -allowProvisioningUpdates
+```
 
-0. **How to build to a .App**
-  - Select "Product" > "Archive"
-  - In archives: "Distribute App"
-  - "Custom" > "Copy App" > Choose a location
-  - The .App will be stored there.
+Xcode may prompt you to sign in with your Apple ID.
+
+3. Locate the built application:
+
+The generated app will be located in the Xcode build output directory.
+
+Alternatively, open:
+
+```text
+iScrobble.xcodeproj
+```
+
+in Xcode and use:
+
+```text
+Product → Archive
+```
+
+Then:
+
+```text
+Distribute App
+→ Custom
+→ Copy App
+```
+
+Choose an output location.
+
+4. Move the generated:
+
+```text
+iScrobble.app
+```
+
+to:
+
+```text
+/Applications
+```
+
+for full macOS functionality.
 
 ### Troubleshooting
 - If you encounter signing errors, ensure your Apple ID is added in Xcode Preferences → Accounts
