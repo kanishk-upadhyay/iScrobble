@@ -4,9 +4,9 @@ import ServiceManagement
 
 struct SettingsView: View {
     @Environment(AppState.self) private var appState
-    @Environment(\.dismiss) private var dismiss
     @Environment(\.openURL) private var openURL
     @Environment(\.openWindow) private var openWindow
+    @Binding var page: PopoverPage
 
     @State private var showingSignOut = false
 
@@ -19,17 +19,17 @@ struct SettingsView: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack {
-                Text("Settings")
-                    .font(.headline)
-                Spacer()
                 Button {
-                    dismiss()
+                    page = .main
                 } label: {
-                    Image(systemName: "xmark.circle.fill")
-                        .foregroundStyle(.secondary)
+                    Image(systemName: "chevron.left")
+                        .foregroundStyle(.tint)
                 }
                 .buttonStyle(.plain)
                 .pointerCursor()
+                Text("Settings")
+                    .font(.headline)
+                Spacer()
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
@@ -105,7 +105,7 @@ struct SettingsView: View {
                             }
                         }
                         Spacer()
-                        Button("Configure") {
+                        Button(storage.hasValidAPICredentials ? "Reconfigure" : "Configure") {
                             NSApp.setActivationPolicy(.regular)
                             NSApp.activate(ignoringOtherApps: true)
                             openWindow(id: "api-credentials")
@@ -115,35 +115,22 @@ struct SettingsView: View {
                         .pointerCursor()
                     }
                 }
-            }
-            .formStyle(.grouped)
-            .frame(width: 380, height: 240)
 
-            Divider()
-
-            VStack(spacing: 5) {
-                Text("iScrobble")
-                    .font(.headline)
-                Text("Version \(version)")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                HStack(spacing: 4) {
-                    Text("Created by")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                    Button("HeXif") {
-                        openURL(URL(string: "https://hexif.vercel.app")!)
+                Section("About") {
+                    LabeledContent("Version", value: version)
+                    HStack(spacing: 4) {
+                        Text("Created by")
+                            .foregroundStyle(.secondary)
+                        Button("HeXif") {
+                            openURL(URL(string: "https://hexif.vercel.app")!)
+                        }
+                        .buttonStyle(.plain)
+                        .foregroundStyle(.tint)
+                        .pointerCursor()
                     }
-                    .buttonStyle(.plain)
-                    .font(.caption)
-                    .foregroundStyle(.tint)
-                    .pointerCursor()
                 }
             }
-            .padding(.vertical, 14)
-
-            Divider()
-
+            .formStyle(.grouped)
         }
         .frame(width: 380)
         .confirmationDialog(
@@ -154,7 +141,7 @@ struct SettingsView: View {
             Button("Sign Out", role: .destructive) {
                 storage.sessionKey = nil
                 storage.username = nil
-                dismiss()
+                page = .main
             }
             Button("Cancel", role: .cancel) {}
         } message: {
@@ -162,4 +149,3 @@ struct SettingsView: View {
         }
     }
 }
-

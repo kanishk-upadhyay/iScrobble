@@ -2,7 +2,7 @@ import SwiftUI
 
 struct AuthView: View {
     @Environment(AppState.self) private var appState
-    @Environment(\.dismiss) private var dismiss
+    @Binding var page: PopoverPage
 
     @State private var username = ""
     @State private var password = ""
@@ -43,8 +43,8 @@ struct AuthView: View {
             }
             
             HStack(spacing: 12) {
-                Button("Cancel") {
-                    dismiss()
+                Button("Back") {
+                    page = .main
                 }
                 .keyboardShortcut(.cancelAction)
 
@@ -83,7 +83,7 @@ struct AuthView: View {
                 )
                 appState.storage.sessionKey = result.sessionKey
                 appState.storage.username = result.name
-                dismiss()
+                page = .main
             } catch {
                 errorMessage = error.localizedDescription
             }

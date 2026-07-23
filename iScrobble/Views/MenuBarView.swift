@@ -1,12 +1,16 @@
 import SwiftUI
 import AppKit
 
+enum PopoverPage: Hashable {
+    case main
+    case settings
+    case auth
+}
+
 struct MenuBarView: View {
     @Environment(AppState.self) private var appState
     @Environment(\.openURL) private var openURL
-    @Environment(\.openWindow) private var openWindow
-    @State private var showingAuth = false
-    @State private var showingSettings = false
+    @State private var page = PopoverPage.main
     @State private var appeared = false
 
     private var monitor: PlaybackMonitor { appState.playbackMonitor }
@@ -15,6 +19,22 @@ struct MenuBarView: View {
     private var storage: StorageManager { appState.storage }
 
     var body: some View {
+        switch page {
+        case .main:
+            mainContent
+        case .settings:
+            SettingsView(page: $page)
+                .environment(appState)
+                .frame(width: 380)
+                .frame(minHeight: 420)
+        case .auth:
+            AuthView(page: $page)
+                .environment(appState)
+                .frame(width: 360)
+        }
+    }
+
+    private var mainContent: some View {
         VStack(spacing: 0) {
             headerSection
             Divider()
@@ -32,11 +52,7 @@ struct MenuBarView: View {
                 appeared = true
             }
             
-            if !storage.hasValidAPICredentials {
-                NSApp.setActivationPolicy(.regular)
-                NSApp.activate(ignoringOtherApps: true)
-                openWindow(id: "api-credentials")
-            }
+            NSApp.setActivationPolicy(.accessory)
         }
         .onDisappear {
             appeared = false
@@ -45,14 +61,6 @@ struct MenuBarView: View {
             withAnimation(.easeIn(duration: 0.12)) {
                 appeared = false
             }
-        }
-        .sheet(isPresented: $showingAuth) {
-            AuthView()
-                .environment(appState)
-        }
-        .sheet(isPresented: $showingSettings) {
-            SettingsView()
-                .environment(appState)
         }
     }
 
@@ -65,7 +73,7 @@ struct MenuBarView: View {
                 .font(.headline)
             Spacer()
             if !storage.isAuthenticated {
-                Button("Sign In") { showingAuth = true }
+                Button("Sign In") { page = .auth }
                     .buttonStyle(.link)
                     .font(.caption)
                     .pointerCursor()
@@ -164,7 +172,7 @@ struct MenuBarView: View {
     private var footerSection: some View {
         HStack {
             Button {
-                showingSettings = true
+                page = .settings
             } label: {
                 Label("Settings", systemImage: "gear")
                     .font(.caption)
