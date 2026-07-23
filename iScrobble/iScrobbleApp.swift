@@ -13,7 +13,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
     
     func applicationWillTerminate(_ notification: Notification) {
-        // Widget extension terminates with the main app automatically
     }
 }
 
