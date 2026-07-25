@@ -51,8 +51,6 @@ struct MenuBarView: View {
             withAnimation(.spring(duration: 0.22, bounce: 0.15)) {
                 appeared = true
             }
-            
-            NSApp.setActivationPolicy(.accessory)
         }
         .onDisappear {
             appeared = false

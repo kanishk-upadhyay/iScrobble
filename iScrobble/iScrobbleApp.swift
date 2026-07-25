@@ -5,15 +5,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let hasCredentials = StorageManager.shared.hasValidAPICredentials
         NSApp.setActivationPolicy(hasCredentials ? .accessory : .regular)
     }
-    
-    func applicationDidBecomeActive(_ notification: Notification) {
-        if StorageManager.shared.hasValidAPICredentials {
-            NSApp.setActivationPolicy(.accessory)
-        }
-    }
-    
-    func applicationWillTerminate(_ notification: Notification) {
-    }
 }
 
 @main

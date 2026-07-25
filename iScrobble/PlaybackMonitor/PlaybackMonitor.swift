@@ -109,7 +109,7 @@ final class PlaybackMonitor {
 
             Task { [weak self] in
                 guard let self = self else { return }
-                // Try MediaRemote first — in-memory, ~10ms
+                // Try MediaRemote first — fastest path
                 if let mrImage = await MediaRemoteArtwork.fetchArtwork() {
                     guard self.lastTrackID == trackID else { return }
                     self.currentTrack = Track(
