@@ -5,16 +5,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let hasCredentials = StorageManager.shared.hasValidAPICredentials
         NSApp.setActivationPolicy(hasCredentials ? .accessory : .regular)
     }
-    
-    func applicationDidBecomeActive(_ notification: Notification) {
-        if StorageManager.shared.hasValidAPICredentials {
-            NSApp.setActivationPolicy(.accessory)
-        }
-    }
-    
-    func applicationWillTerminate(_ notification: Notification) {
-        // Widget extension terminates with the main app automatically
-    }
 }
 
 @main
@@ -31,29 +21,35 @@ struct iScrobbleApp: App {
                 .task { await appState.start() }
         }
         .menuBarExtraStyle(.window)
-        
+
+        Window("Settings", id: "settings") {
+            SettingsView()
+                .environment(appState)
+        }
+        .windowResizability(.contentSize)
+        .defaultPosition(.center)
+
+        Window("Sign In", id: "auth") {
+            AuthView()
+                .environment(appState)
+        }
+        .windowResizability(.contentSize)
+        .defaultPosition(.center)
+
         Window("API Setup", id: "api-credentials") {
             APICredentialWindowView()
                 .environment(appState)
-                .onDisappear {
-                    if appState.storage.hasValidAPICredentials {
-                        NSApp.setActivationPolicy(.accessory)
-                    }
-                }
         }
-        .windowStyle(.hiddenTitleBar)
         .windowResizability(.contentSize)
         .defaultPosition(.center)
     }
 }
 
-
 struct MenuBarIconView: View {
     let isPlaying: Bool
 
     var body: some View {
-        Image(systemName: isPlaying ? "music.note" : "music.note.slash")
-            .symbolRenderingMode(.hierarchical)
-            .help(isPlaying ? "iScrobble — Now playing" : "iScrobble — Not playing")
+        Image(systemName: isPlaying ? "music.note" : "music.note")
+            .foregroundStyle(isPlaying ? .green : .primary)
     }
 }

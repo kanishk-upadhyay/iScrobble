@@ -5,14 +5,20 @@ struct MenuBarView: View {
     @Environment(AppState.self) private var appState
     @Environment(\.openURL) private var openURL
     @Environment(\.openWindow) private var openWindow
-    @State private var showingAuth = false
-    @State private var showingSettings = false
     @State private var appeared = false
 
     private var monitor: PlaybackMonitor { appState.playbackMonitor }
     private var scrobbleManager: ScrobbleManager { appState.scrobbleManager }
     private var statsManager: StatsManager { appState.statsManager }
     private var storage: StorageManager { appState.storage }
+
+    /// openWindow alone is unreliable from MenuBarExtra — the app must also
+    /// become regular + active for the window to actually front.
+    private func openDedicated(_ id: String) {
+        openWindow(id: id)
+        NSApp.setActivationPolicy(.regular)
+        NSApp.activate(ignoringOtherApps: true)
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -33,9 +39,7 @@ struct MenuBarView: View {
             }
             
             if !storage.hasValidAPICredentials {
-                NSApp.setActivationPolicy(.regular)
-                NSApp.activate(ignoringOtherApps: true)
-                openWindow(id: "api-credentials")
+                openDedicated("api-credentials")
             }
         }
         .onDisappear {
@@ -45,14 +49,6 @@ struct MenuBarView: View {
             withAnimation(.easeIn(duration: 0.12)) {
                 appeared = false
             }
-        }
-        .sheet(isPresented: $showingAuth) {
-            AuthView()
-                .environment(appState)
-        }
-        .sheet(isPresented: $showingSettings) {
-            SettingsView()
-                .environment(appState)
         }
     }
 
@@ -65,7 +61,7 @@ struct MenuBarView: View {
                 .font(.headline)
             Spacer()
             if !storage.isAuthenticated {
-                Button("Sign In") { showingAuth = true }
+                Button("Sign In") { openDedicated("auth") }
                     .buttonStyle(.link)
                     .font(.caption)
                     .pointerCursor()
@@ -164,7 +160,7 @@ struct MenuBarView: View {
     private var footerSection: some View {
         HStack {
             Button {
-                showingSettings = true
+                openDedicated("settings")
             } label: {
                 Label("Settings", systemImage: "gear")
                     .font(.caption)

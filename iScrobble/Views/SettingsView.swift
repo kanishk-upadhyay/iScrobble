@@ -8,7 +8,7 @@ struct SettingsView: View {
     @Environment(\.openURL) private var openURL
     @Environment(\.openWindow) private var openWindow
 
-    @State private var showingSignOut = false
+    @State private var confirmSignOut = false
 
     private var storage: StorageManager { appState.storage }
 
@@ -18,24 +18,6 @@ struct SettingsView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            HStack {
-                Text("Settings")
-                    .font(.headline)
-                Spacer()
-                Button {
-                    dismiss()
-                } label: {
-                    Image(systemName: "xmark.circle.fill")
-                        .foregroundStyle(.secondary)
-                }
-                .buttonStyle(.plain)
-                .pointerCursor()
-            }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
-
-            Divider()
-
             Form {
                 Section("Scrobbling") {
                     Toggle(isOn: Binding(
@@ -81,9 +63,14 @@ struct SettingsView: View {
                         if let username = storage.username {
                             LabeledContent("Last.fm User", value: username)
                         }
-                        Button("Sign Out", role: .destructive) {
-                            showingSignOut = true
+                        Button {
+                            confirmSignOut = true
+                        } label: {
+                            Label("Sign Out", systemImage: "rectangle.portrait.and.arrow.right")
+                                .foregroundStyle(.red)
                         }
+                        .buttonStyle(.plain)
+                        .pointerCursor()
                     } else {
                         Text("Not signed in")
                             .foregroundStyle(.secondary)
@@ -105,7 +92,7 @@ struct SettingsView: View {
                             }
                         }
                         Spacer()
-                        Button("Configure") {
+                        Button(storage.hasValidAPICredentials ? "Reconfigure" : "Configure") {
                             NSApp.setActivationPolicy(.regular)
                             NSApp.activate(ignoringOtherApps: true)
                             openWindow(id: "api-credentials")
@@ -115,51 +102,33 @@ struct SettingsView: View {
                         .pointerCursor()
                     }
                 }
-            }
-            .formStyle(.grouped)
-            .frame(width: 380, height: 240)
 
-            Divider()
-
-            VStack(spacing: 5) {
-                Text("iScrobble")
-                    .font(.headline)
-                Text("Version \(version)")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                HStack(spacing: 4) {
-                    Text("Created by")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                    Button("HeXif") {
-                        openURL(URL(string: "https://hexif.vercel.app")!)
+                Section("About") {
+                    LabeledContent("Version", value: version)
+                    HStack(spacing: 4) {
+                        Text("Created by")
+                            .foregroundStyle(.secondary)
+                        Button("HeXif") {
+                            openURL(URL(string: "https://hexif.vercel.app")!)
+                        }
+                        .buttonStyle(.plain)
+                        .foregroundStyle(.tint)
+                        .pointerCursor()
                     }
-                    .buttonStyle(.plain)
-                    .font(.caption)
-                    .foregroundStyle(.tint)
-                    .pointerCursor()
                 }
             }
-            .padding(.vertical, 14)
-
-            Divider()
-
+            .formStyle(.grouped)
         }
         .frame(width: 380)
-        .confirmationDialog(
-            "Sign out of Last.fm?",
-            isPresented: $showingSignOut,
-            titleVisibility: .visible
-        ) {
+        .alert("Sign out of Last.fm?", isPresented: $confirmSignOut) {
+            Button("Cancel", role: .cancel) {}
             Button("Sign Out", role: .destructive) {
                 storage.sessionKey = nil
                 storage.username = nil
                 dismiss()
             }
-            Button("Cancel", role: .cancel) {}
         } message: {
             Text("iScrobble will stop scrobbling until you sign in again.")
         }
     }
 }
-
