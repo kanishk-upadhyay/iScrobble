@@ -144,11 +144,9 @@ struct APICredentialWindowView: View {
         
         appState.storage.apiKey = trimmedKey
         appState.storage.apiSecret = trimmedSecret
-        
+
         showError = false
-        
-        NSApp.setActivationPolicy(.accessory)
-        
+
         dismissWindow(id: "api-credentials")
     }
 }
