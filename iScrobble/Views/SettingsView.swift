@@ -114,8 +114,6 @@ struct SettingsView: View {
                         }
                         Spacer()
                         Button(storage.hasValidAPICredentials ? "Reconfigure" : "Configure") {
-                            NSApp.setActivationPolicy(.regular)
-                            NSApp.activate(ignoringOtherApps: true)
                             openWindow(id: "api-credentials")
                         }
                         .buttonStyle(.plain)
