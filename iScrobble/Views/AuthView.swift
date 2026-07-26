@@ -71,7 +71,9 @@ struct AuthView: View {
         .padding(24)
         .frame(width: 360)
         .onAppear {
-            focusedField = true
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                focusedField = true
+            }
         }
     }
 
