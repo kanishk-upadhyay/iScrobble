@@ -1,5 +1,9 @@
 import SwiftUI
 
+// Activation policy: set once in applicationWillFinishLaunching based on
+// credentials. Each call site that opens a dedicated window promotes to
+// .regular via openDedicated() or inline. Never set .accessory from
+// onAppear/save/teardown — it kills all open windows.
 class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationWillFinishLaunching(_ notification: Notification) {
         let hasCredentials = StorageManager.shared.hasValidAPICredentials

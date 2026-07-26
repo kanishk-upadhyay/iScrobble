@@ -1,12 +1,6 @@
 import SwiftUI
 import AppKit
 
-enum PopoverPage: Hashable {
-    case main
-    case settings
-    case auth
-}
-
 struct MenuBarView: View {
     @Environment(AppState.self) private var appState
     @Environment(\.openURL) private var openURL

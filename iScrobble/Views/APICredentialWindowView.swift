@@ -120,9 +120,6 @@ struct APICredentialWindowView: View {
         .onAppear {
             apiKey = appState.storage.apiKey ?? ""
             apiSecret = appState.storage.apiSecret ?? ""
-
-            NSApp.setActivationPolicy(.regular)
-            NSApp.activate(ignoringOtherApps: true)
         }
     }
     
