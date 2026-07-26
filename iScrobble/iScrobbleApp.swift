@@ -53,7 +53,8 @@ struct MenuBarIconView: View {
     let isPlaying: Bool
 
     var body: some View {
-        Image(systemName: isPlaying ? "music.note" : "music.note")
-            .foregroundStyle(isPlaying ? .green : .primary)
+        Image(systemName: isPlaying ? "music.note" : "music.note.slash")
+            .symbolRenderingMode(.hierarchical)
+            .help(isPlaying ? "iScrobble — Now playing" : "iScrobble — Not playing")
     }
 }
