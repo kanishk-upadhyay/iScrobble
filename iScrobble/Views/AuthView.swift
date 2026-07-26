@@ -8,6 +8,7 @@ struct AuthView: View {
     @State private var password = ""
     @State private var isLoading = false
     @State private var errorMessage: String?
+    @FocusState private var focusedField: Bool
 
     var body: some View {
         VStack(spacing: 20) {
@@ -28,6 +29,7 @@ struct AuthView: View {
                 TextField("Username", text: $username)
                     .textFieldStyle(.roundedBorder)
                     .autocorrectionDisabled()
+                    .focused($focusedField)
                     .textContentType(.username)
 
                 SecureField("Password", text: $password)
@@ -68,6 +70,9 @@ struct AuthView: View {
         }
         .padding(24)
         .frame(width: 360)
+        .onAppear {
+            focusedField = true
+        }
     }
 
     private func signIn() {
