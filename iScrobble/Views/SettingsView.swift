@@ -93,8 +93,19 @@ struct SettingsView: View {
                         .buttonStyle(.plain)
                         .pointerCursor()
                     } else {
-                        Text("Not signed in")
-                            .foregroundStyle(.secondary)
+                        HStack {
+                            Text("Not signed in")
+                                .foregroundStyle(.secondary)
+                            Spacer()
+                            Button {
+                                page = .auth
+                            } label: {
+                                Text("Sign In")
+                                    .foregroundStyle(.tint)
+                            }
+                            .buttonStyle(.plain)
+                            .pointerCursor()
+                        }
                     }
                 }
 
@@ -184,5 +195,4 @@ struct SettingsView: View {
             }
         }
     }
-
 }
