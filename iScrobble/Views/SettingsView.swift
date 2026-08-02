@@ -72,8 +72,21 @@ struct SettingsView: View {
                         .buttonStyle(.plain)
                         .pointerCursor()
                     } else {
-                        Text("Not signed in")
-                            .foregroundStyle(.secondary)
+                        HStack {
+                            Text("Not signed in")
+                                .foregroundStyle(.secondary)
+                            Spacer()
+                            Button {
+                                NSApp.setActivationPolicy(.regular)
+                                NSApp.activate(ignoringOtherApps: true)
+                                openWindow(id: "auth")
+                            } label: {
+                                Text("Sign In")
+                                    .foregroundStyle(.tint)
+                            }
+                            .buttonStyle(.plain)
+                            .pointerCursor()
+                        }
                     }
                 }
 
